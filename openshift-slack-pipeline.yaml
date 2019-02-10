@@ -50,12 +50,10 @@ objects:
                 error "Program failed, please read logs..."
           }
           stage 'prod'
-          {
+          try {
           slackSend (color: '#FFFF00', message: "Approval Required: Deploy 'green' to PROD")
           input('Approve?')
           slackSend (color: '#00FF00', message: "Approved: Deploy 'green' to PROD")
-          }
-          try {
           openshiftDeploy(deploymentConfig: 'green')
           openshiftScale(deploymentConfig: 'green',replicaCount: '2')
           } catch(err) {
