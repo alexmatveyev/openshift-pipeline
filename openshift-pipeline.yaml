@@ -15,10 +15,6 @@ spec:
     jenkinsPipelineStrategy:
       jenkinsfile: |-
         node {
-        stage ('build')
-        {
-        openshiftBuild(buildConfig: 'blue', showBuildLogs: 'true')
-        }
         stage ('dev')
         {
         openshiftDeploy(deploymentConfig: 'blue')
