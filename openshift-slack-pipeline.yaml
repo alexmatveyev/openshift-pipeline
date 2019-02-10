@@ -8,8 +8,7 @@ objects:
   kind: BuildConfig
   metadata:
     annotations:
-      pipeline.alpha.openshift.io/uses: '[{"": "bluegreen", "namespace": "", "kind":
-        "DeploymentConfig"}]'
+      pipeline.alpha.openshift.io/uses: '[{"name": "green", "namespace": "", "kind": "DeploymentConfig"}]'
     creationTimestamp: null
     labels:
       name: openshift-slack-pipeline
@@ -28,17 +27,18 @@ objects:
           node() {
           stage 'build'
           try {
+          slackSend (color: '#FFFF00', message: "Started: Build 'green'")
           openshiftBuild(buildConfig: 'green', showBuildLogs: 'true')
           } catch(err) {
-                slackSend (color: '#ff0000', message: "Failed: Build")
+                slackSend (color: '#FF0000', message: "Failed: Build")
                 error "Program failed, please read logs..."
           }
-          slackSend (color: '##0019ff', message: "Success: Build")
+          slackSend (color: '#00FF00', message: "Success: Build 'green'")
           stage 'dev'
           try {
           openshiftDeploy(deploymentConfig: 'green')
           } catch(err) {
-                slackSend (color: '#ff0000', message: "Failed: Deploy to DEV")
+                slackSend (color: '#FF0000', message: "Failed: Deploy to DEV")
                 error "Program failed, please read logs..."
           }
           stage 'uat'
@@ -46,18 +46,23 @@ objects:
           openshiftDeploy(deploymentConfig: 'green')
           openshiftScale(deploymentConfig: 'green',replicaCount: '2')
           } catch(err) {
-                slackSend (color: '#ff0000', message: "Failed: Deploy to UAT")
+                slackSend (color: '#FF0000', message: "Failed: Deploy to UAT")
                 error "Program failed, please read logs..."
           }
           stage 'prod'
+          {
+          slackSend (color: '#FFFF00', message: "Approval Required: Deploy 'green' to PROD")
+          input('Approve?')
+          slackSend (color: '#00FF00', message: "Approved: Deploy 'green' to PROD")
+          }
           try {
           openshiftDeploy(deploymentConfig: 'green')
           openshiftScale(deploymentConfig: 'green',replicaCount: '2')
           } catch(err) {
-                slackSend (color: '#ff0000', message: "Failed: Deploy PROD")
+                slackSend (color: '#FF0000', message: "Failed: Deploy PROD")
                 error "Program failed, please read logs..."
           }
-          slackSend (color: '##0019ff', message: "Success: Deploy to PROD")
+          slackSend (color: '#00FF00', message: "Success: Deploy 'green' to PROD")
           }
       type: JenkinsPipeline
     triggers:
