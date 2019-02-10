@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: openshift-slack
+objects:
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      pipeline.alpha.openshift.io/uses: '[{"": "bluegreen", "namespace": "", "kind":
+        "DeploymentConfig"}]'
+    creationTimestamp: null
+    labels:
+      name: openshift-slack-pipeline
+    name: openshift-slack-pipeline
+  spec:
+    nodeSelector: null
+    output: {}
+    postCommit: {}
+    resources: {}
+    runPolicy: Serial
+    source:
+      type: None
+    strategy:
+      jenkinsPipelineStrategy:
+        jenkinsfile: |
+          node() {
+          stage 'build'
+          try {
+          openshiftBuild(buildConfig: 'green', showBuildLogs: 'true')
+          } catch(err) {
+                slackSend (color: '#ff0000', message: "Failed: Build")
+                error "Program failed, please read logs..."
+          }
+          slackSend (color: '##0019ff', message: "Success: Build")
+          stage 'dev'
+          try {
+          openshiftDeploy(deploymentConfig: 'green')
+          } catch(err) {
+                slackSend (color: '#ff0000', message: "Failed: Deploy to DEV")
+                error "Program failed, please read logs..."
+          }
+          stage 'uat'
+          try {
+          openshiftDeploy(deploymentConfig: 'green')
+          openshiftScale(deploymentConfig: 'green',replicaCount: '2')
+          } catch(err) {
+                slackSend (color: '#ff0000', message: "Failed: Deploy to UAT")
+                error "Program failed, please read logs..."
+          }
+          stage 'prod'
+          try {
+          openshiftDeploy(deploymentConfig: 'green')
+          openshiftScale(deploymentConfig: 'green',replicaCount: '2')
+          } catch(err) {
+                slackSend (color: '#ff0000', message: "Failed: Deploy PROD")
+                error "Program failed, please read logs..."
+          }
+          slackSend (color: '##0019ff', message: "Success: Deploy to PROD")
+          }
+      type: JenkinsPipeline
+    triggers:
+    - github:
+        secret: secret101
+      type: GitHub
+    - generic:
+        secret: secret101
+      type: Generic
+  status:
+    lastVersion: 0
