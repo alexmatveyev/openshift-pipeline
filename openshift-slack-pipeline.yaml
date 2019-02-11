@@ -55,7 +55,7 @@ objects:
           input('Approve?')
           slackSend (color: '#00FF00', message: "Approved: Deploy 'green' to PROD")
           openshiftDeploy(deploymentConfig: 'green')
-          openshiftScale(deploymentConfig: 'green',replicaCount: '2')
+          openshiftScale(deploymentConfig: 'green',replicaCount: '4')
           } catch(err) {
                 slackSend (color: '#FF0000', message: "Failed: Deploy PROD")
                 error "Program failed, please read logs..."
