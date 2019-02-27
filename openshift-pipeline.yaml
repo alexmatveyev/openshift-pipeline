@@ -26,6 +26,7 @@ spec:
         stage ('prod')
         {
         input('Approve?')
+        openshiftScale(deploymentConfig: 'blue',replicaCount: '2')
         }
         }
   output:
